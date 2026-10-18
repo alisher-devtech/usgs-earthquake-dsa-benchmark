@@ -13,56 +13,56 @@ def shouldSwap(r1, r2, col, ascending=True):
         return v1 < v2
 
 def bubbleSort(arr, col, ascending=True):
-    arr = list(arr)
-    n = len(arr)
+    A = list(arr)
+    n = len(A)
     comp = 0
-    swap = 0
+    swap_count = 0
     for i in range(n - 1):
-        swapped = False
+        swap = False
         for j in range(n - 1 - i):
             comp += 1
-            if shouldSwap(arr[j], arr[j + 1], col, ascending):
-                arr[j], arr[j + 1] = arr[j + 1], arr[j]
-                swap += 1
-                swapped = True
-        if not swapped:
+            if shouldSwap(A[j], A[j + 1], col, ascending):
+                A[j], A[j + 1] = A[j + 1], A[j]
+                swap = True
+                swap_count += 1
+        if swap == False:
             break
-    return arr, comp, swap
+    return A, comp, swap_count
 
 def selectionSort(arr, col, ascending=True):
-    arr = list(arr)
-    n = len(arr)
+    A = list(arr)
+    n = len(A)
     comp = 0
-    swap = 0
+    swap_count = 0
     for i in range(n):
         min_idx = i
         for j in range(i + 1, n):
             comp += 1
-            if shouldSwap(arr[min_idx], arr[j], col, ascending):
+            if shouldSwap(A[min_idx], A[j], col, ascending):
                 min_idx = j
         if min_idx != i:
-            arr[i], arr[min_idx] = arr[min_idx], arr[i]
-            swap += 1
-    return arr, comp, swap
+            A[i], A[min_idx] = A[min_idx], A[i]
+            swap_count += 1
+    return A, comp, swap_count
 
 def insertionSort(arr, col, ascending=True):
-    arr = list(arr)
-    n = len(arr)
+    A = list(arr)
+    n = len(A)
     comp = 0
-    swap = 0
+    swap_count = 0
     for i in range(1, n):
-        key = arr[i]
+        key = A[i]
         j = i - 1
         while j >= 0:
             comp += 1
-            if shouldSwap(arr[j], key, col, ascending):
-                arr[j + 1] = arr[j]
-                swap += 1
-                j = j - 1
+            if shouldSwap(A[j], key, col, ascending):
+                A[j + 1] = A[j]
+                swap_count += 1
+                j -= 1
             else:
                 break
-        arr[j + 1] = key
-    return arr, comp, swap
+        A[j + 1] = key
+    return A, comp, swap_count
 
 def Merge(left, right, col, ascending, comp, swap):
     result = []
@@ -72,17 +72,17 @@ def Merge(left, right, col, ascending, comp, swap):
         comp[0] += 1
         if not shouldSwap(left[i], right[j], col, ascending):
             result.append(left[i])
-            i += 1
+            i = i + 1
         else:
             result.append(right[j])
             swap[0] += 1
-            j += 1
+            j = j + 1
     while i < len(left):
         result.append(left[i])
-        i += 1
+        i = i + 1
     while j < len(right):
         result.append(right[j])
-        j += 1
+        j = j + 1
     return result
 
 def mergeSort(arr, col, ascending=True):
@@ -92,18 +92,18 @@ def mergeSort(arr, col, ascending=True):
         if len(lst) <= 1:
             return lst
         mid = len(lst) // 2
-        left_half = sort(lst[:mid])
-        right_half = sort(lst[mid:])
-        return Merge(left_half, right_half, col, ascending, comp, swap)
+        left = sort(lst[:mid])
+        right = sort(lst[mid:])
+        return Merge(left, right, col, ascending, comp, swap)
     sorted_arr = sort(list(arr))
     return sorted_arr, comp[0], swap[0]
 
 def partition(A, low, high, col, ascending, comp, swap):
-    pivot = A[high]
+    x = A[high]
     i = low - 1
     for j in range(low, high):
         comp[0] += 1
-        if not shouldSwap(A[j], pivot, col, ascending):
+        if not shouldSwap(A[j], x, col, ascending):
             i += 1
             A[i], A[j] = A[j], A[i]
             swap[0] += 1
@@ -117,20 +117,20 @@ def quickSort(arr, col, ascending=True):
     swap = [0]
     def sort(low, high):
         while low < high:
-            p = partition(A, low, high, col, ascending, comp, swap)
-            if (p - low) < (high - p):
-                sort(low, p - 1)
-                low = p + 1
+            q = partition(A, low, high, col, ascending, comp, swap)
+            if (q - low) < (high - q):
+                sort(low, q - 1)
+                low = q + 1
             else:
-                sort(p + 1, high)
-                high = p - 1
+                sort(q + 1, high)
+                high = q - 1
     sort(0, len(A) - 1)
     return A, comp[0], swap[0]
 
 def countingSort(arr, col, ascending=True):
     A = list(arr)
     n = len(A)
-    if n <= 1:
+    if n == 0:
         return A, 0, 0
     vals = []
     for x in A:
@@ -149,39 +149,38 @@ def countingSort(arr, col, ascending=True):
         scale = 1
     keys = []
     for v in vals:
-        scaled_val = int(round((v - minVal) * scale))
-        keys.append(scaled_val)
+        keys.append(int(round((v - minVal) * scale)))
     M = max(keys)
     count_array = [0] * (M + 1)
-    output_array = [None] * n
+    output_array = [0] * n
     for k in keys:
-        count_array[k] += 1
+        count_array[k] = count_array[k] + 1
     for i in range(1, M + 1):
-        count_array[i] += count_array[i - 1]
+        count_array[i] = count_array[i] + count_array[i - 1]
     for j in range(n - 1, -1, -1):
-        target_idx = count_array[keys[j]] - 1
+        value = keys[j]
+        target_idx = count_array[value] - 1
         output_array[target_idx] = A[j]
-        count_array[keys[j]] -= 1
+        count_array[value] -= 1
     if not ascending:
         output_array.reverse()
     return output_array, n, n
 
-def countingSortByDigit(A, units, swap):
+def counting_sort_by_digit(A, units, swap):
     n = len(A)
     count_array = [0] * 10
-    output_array = [None] * n
-    for item in A:
-        k = item[1]
-        digit = (k // units) % 10
-        count_array[digit] += 1
+    output_array = [0] * n
+    for x in A:
+        digit = (x[1] // units) % 10
+        count_array[digit] = count_array[digit] + 1
     for i in range(1, 10):
-        count_array[i] += count_array[i - 1]
+        count_array[i] = count_array[i] + count_array[i - 1]
     for j in range(n - 1, -1, -1):
-        k = A[j][1]
-        digit = (k // units) % 10
+        value = A[j]
+        digit = (value[1] // units) % 10
         target_idx = count_array[digit] - 1
-        output_array[target_idx] = A[j]
-        count_array[digit] -= 1
+        output_array[target_idx] = value
+        count_array[digit] = count_array[digit] - 1
         swap[0] += 1
     for i in range(n):
         A[i] = output_array[i]
@@ -189,7 +188,7 @@ def countingSortByDigit(A, units, swap):
 def radixSort(arr, col, ascending=True):
     A = list(arr)
     n = len(A)
-    if n <= 1:
+    if n == 0:
         return A, 0, 0
     vals = []
     for x in A:
@@ -205,17 +204,18 @@ def radixSort(arr, col, ascending=True):
         paired.append((A[i], int_key))
         if int_key > max_key:
             max_key = int_key
+    M = max_key
     units = 1
     swap = [0]
-    while max_key // units > 0:
-        countingSortByDigit(paired, units, swap)
-        units = units * 10
+    while M // units > 0:
+        counting_sort_by_digit(paired, units, swap)
+        units *= 10
     res = []
     for p in paired:
         res.append(p[0])
     if not ascending:
         res.reverse()
-    comparisons = n * len(str(max_key))
+    comparisons = n * len(str(M))
     return res, comparisons, swap[0]
 
 def bucketSort(arr, col, ascending=True):
@@ -234,33 +234,30 @@ def bucketSort(arr, col, ascending=True):
     span = maxVal - minVal
     if span == 0:
         span = 1.0
-    numBuckets = min(n, 100)
-    buckets = []
-    for i in range(numBuckets):
-        buckets.append([])
+    num_buckets = min(n, 100)
+    buckets = [[] for i in range(num_buckets)]
     for i in range(n):
-        x = A[i]
         v = vals[i]
-        idx = int(numBuckets * (v - minVal) / span)
-        if idx >= numBuckets:
-            idx = numBuckets - 1
-        buckets[idx].append(x)
+        target_idx = int(num_buckets * (v - minVal) / span)
+        if target_idx >= num_buckets:
+            target_idx = num_buckets - 1
+        buckets[target_idx].append(A[i])
     totalComp = 0
     totalSwaps = 0
-    for i in range(len(buckets)):
-        b = buckets[i]
-        if len(b) > 1:
-            sortedB, comp, sw = insertionSort(b, col, ascending)
+    for x in buckets:
+        if len(x) > 1:
+            sortedB, comp, sw = insertionSort(x, col, ascending)
             totalComp += comp
             totalSwaps += sw
-            buckets[i] = sortedB
+            x[:] = sortedB
     if not ascending:
         buckets.reverse()
-    res = []
-    for b in buckets:
-        for y in b:
-            res.append(y)
-    return res, totalComp, totalSwaps
+    idx = 0
+    for x in buckets:
+        for y in x:
+            A[idx] = y
+            idx += 1
+    return A, totalComp, totalSwaps
 
 def heapify(A, n, i, col, ascending, comp, swap):
     target = i
@@ -296,23 +293,23 @@ def shellSort(arr, col, ascending=True):
     A = list(arr)
     n = len(A)
     comp = 0
-    swap = 0
+    swap_count = 0
     gap = n // 2
     while gap > 0:
         for i in range(gap, n):
-            temp = A[i]
+            key = A[i]
             j = i
             while j >= gap:
                 comp += 1
-                if shouldSwap(A[j - gap], temp, col, ascending):
+                if shouldSwap(A[j - gap], key, col, ascending):
                     A[j] = A[j - gap]
-                    swap += 1
-                    j = j - gap
+                    swap_count += 1
+                    j -= gap
                 else:
                     break
-            A[j] = temp
+            A[j] = key
         gap = gap // 2
-    return A, comp, swap
+    return A, comp, swap_count
 
 SORT_FUNCTIONS = {
     "Bubble Sort": bubbleSort,
@@ -361,25 +358,25 @@ def multiLevelSort(arr, col1, asc1, col2, asc2):
             comp[0] += 1
             if not multiLevelCompare(left[i], right[j], col1, asc1, col2, asc2):
                 res.append(left[i])
-                i += 1
+                i = i + 1
             else:
                 res.append(right[j])
                 swap[0] += 1
-                j += 1
+                j = j + 1
         while i < len(left):
             res.append(left[i])
-            i += 1
+            i = i + 1
         while j < len(right):
             res.append(right[j])
-            j += 1
+            j = j + 1
         return res
     def sort(lst):
         if len(lst) <= 1:
             return lst
         mid = len(lst) // 2
-        left_half = sort(lst[:mid])
-        right_half = sort(lst[mid:])
-        return merge(left_half, right_half)
+        left = sort(lst[:mid])
+        right = sort(lst[mid:])
+        return merge(left, right)
     t0 = time.time()
     sorted_arr = sort(list(arr))
     elapsed_ms = (time.time() - t0) * 1000.0
