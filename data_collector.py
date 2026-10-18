@@ -72,28 +72,41 @@ class ScraperThread(QThread):
                 for item in features:
                     props = item.get("properties", {})
                     geom = item.get("geometry", {})
-                    coords = (
-                        geom.get("coordinates", [0.0, 0.0, 0.0])
-                        if geom
-                        else [0.0, 0.0, 0.0]
-                    )
+
+                    if geom and "coordinates" in geom:
+                        coords = geom.get("coordinates")
+                    else:
+                        coords = [0.0, 0.0, 0.0]
+
+                    mag = props.get("mag")
+                    if mag is not None:
+                        mag_value = float(mag)
+                    else:
+                        mag_value = 0.0
+
+                    if len(coords) > 2:
+                        depth_value = float(coords[2])
+                    else:
+                        depth_value = 0.0
+
+                    if len(coords) > 1:
+                        lat_value = float(coords[1])
+                    else:
+                        lat_value = 0.0
+
+                    if len(coords) > 0:
+                        lon_value = float(coords[0])
+                    else:
+                        lon_value = 0.0
 
                     record = {
                         "id": str(item.get("id", "")),
                         "place": str(props.get("place", "Unknown Location")),
-                        "magnitude": (
-                            float(props.get("mag"))
-                            if props.get("mag") is not None
-                            else 0.0
-                        ),
+                        "magnitude": mag_value,
                         "time": int(props.get("time", 0)),
-                        "depth": (
-                            float(coords[2]) if len(coords) > 2 else 0.0
-                        ),
-                        "latitude": float(coords[1]) if len(coords) > 1 else 0.0,
-                        "longitude": (
-                            float(coords[0]) if len(coords) > 0 else 0.0
-                        ),
+                        "depth": depth_value,
+                        "latitude": lat_value,
+                        "longitude": lon_value,
                         "significance": int(props.get("sig", 0)),
                         "status": str(props.get("status", "automatic")),
                     }
