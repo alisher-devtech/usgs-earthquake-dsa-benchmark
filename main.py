@@ -28,13 +28,13 @@ ALGORITHM_INFO = {
 }
 
 class BenchmarkDialog(QDialog):
-    def __init__(self, benchmark_results, parent=None):
+    def __init__(self, benchmark_results, total_count=15000, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Sorting Algorithms Benchmark")
-        self.resize(750, 350)
+        self.setWindowTitle(f"Sorting Algorithms Benchmark ({total_count:,} Records)")
+        self.resize(780, 370)
 
         layout = QVBoxLayout(self)
-        label = QLabel("<b>Benchmark Comparison on Selected Column:</b>")
+        label = QLabel(f"<b>Benchmark Comparison on Selected Column (Evaluated on all {total_count:,} records):</b>")
         layout.addWidget(label)
 
         self.table = QTableWidget()
@@ -157,7 +157,7 @@ class EarthquakeApp(QMainWindow):
 
         page_size_label = QLabel("Page Size:")
         self.page_size_cb = QComboBox()
-        self.page_size_cb.addItems(["500", "1000", "2000", "5000"])
+        self.page_size_cb.addItems(["1000", "2000", "5000", "15000", "All (15,000)"])
         self.page_size_cb.setCurrentText("1000")
         self.page_size_cb.setFixedHeight(28)
         self.page_size_cb.currentTextChanged.connect(self.on_page_size_changed)
@@ -175,7 +175,7 @@ class EarthquakeApp(QMainWindow):
         pagination_layout.addWidget(self.page_size_cb)
         pagination_layout.addSpacing(15)
 
-        self.instruction_label = QLabel("💡 <i>Paginated view: All 15,000 entities are stored in memory & evaluated in all DSA operations.</i>")
+        self.instruction_label = QLabel("💡 <i>Dataset Active: All 15,000 entities in memory for all DSA operations. Select 'All (15,000)' in Page Size to view all rows at once.</i>")
         self.instruction_label.setStyleSheet("color: #455a64; font-size: 11px;")
         pagination_layout.addWidget(self.instruction_label)
         pagination_layout.addStretch()
@@ -212,7 +212,7 @@ class EarthquakeApp(QMainWindow):
 
         controls.addWidget(QLabel("Scope:"))
         self.sort_scope_cb = QComboBox()
-        self.sort_scope_cb.addItems(["Current Filtered Data", "Full Dataset"])
+        self.sort_scope_cb.addItems(["Full Dataset (15,000 rows)", "Current Filtered Data"])
         controls.addWidget(self.sort_scope_cb)
 
         self.btn_sort = QPushButton("Sort Now")
@@ -493,11 +493,13 @@ class EarthquakeApp(QMainWindow):
         end_idx = min(start_idx + page_size, total_records)
         display_rows = self.current_data[start_idx:end_idx]
 
+        self.table.setUpdatesEnabled(False)
         self.table.setRowCount(len(display_rows))
         for row_idx, row in enumerate(display_rows):
             for col_idx, col_name in enumerate(self.columns):
                 val = str(row.get(col_name, ""))
                 self.table.setItem(row_idx, col_idx, QTableWidgetItem(val))
+        self.table.setUpdatesEnabled(True)
 
         self.page_info_label.setText(
             f"Page {self.current_page} of {total_pages} | "
@@ -545,7 +547,10 @@ class EarthquakeApp(QMainWindow):
 
     def on_page_size_changed(self, text):
         try:
-            self.page_size = int(text)
+            if "All" in text:
+                self.page_size = max(len(self.current_data), 1)
+            else:
+                self.page_size = int(text)
             self.current_page = 1
             self.render_table(reset_page=False)
         except ValueError:
@@ -567,13 +572,13 @@ class EarthquakeApp(QMainWindow):
         ascending = (self.sort_order_cb.currentText() == "Ascending")
         scope = self.sort_scope_cb.currentText()
 
-        source_data = self.current_data if scope == "Current Filtered Data" else self.all_data
+        source_data = self.all_data if "Full Dataset" in scope else self.current_data
 
         sorted_arr, comparisons, swaps, time_ms = algorithms.runSort(algo, source_data, col, ascending)
 
         info = ALGORITHM_INFO.get(algo, {"complexity": "-", "stable": "-"})
         self.sort_metrics_label.setText(
-            f"Time: {time_ms:.2f} ms\nComparisons: {comparisons:,}\nSwaps: {swaps:,}\nComplexity: {info['complexity']}\nStable: {info['stable']}"
+            f"Sorted: {len(sorted_arr):,} rows | Time: {time_ms:.2f} ms | Comparisons: {comparisons:,} | Swaps: {swaps:,}\nComplexity: {info['complexity']} | Stable: {info['stable']}"
         )
 
         self.current_data = sorted_arr
@@ -585,13 +590,13 @@ class EarthquakeApp(QMainWindow):
             return
 
         col = self.sort_col_cb.currentText()
-
-        sample_size = min(len(self.all_data), 1000)
-        sample_data = self.all_data[:sample_size]
+        scope = self.sort_scope_cb.currentText()
+        benchmark_data = self.all_data if "Full Dataset" in scope else self.current_data
+        total_items = len(benchmark_data)
 
         results = []
         for algo_name in algorithms.SORT_FUNCTIONS.keys():
-            sorted_arr, comparisons, swaps, time_ms = algorithms.runSort(algo_name, sample_data, col, ascending=True)
+            sorted_arr, comparisons, swaps, time_ms = algorithms.runSort(algo_name, benchmark_data, col, ascending=True)
             info = ALGORITHM_INFO.get(algo_name, {"complexity": "-", "stable": "-"})
             results.append({
                 "name": algo_name,
@@ -602,7 +607,7 @@ class EarthquakeApp(QMainWindow):
                 "swaps": swaps
             })
 
-        dialog = BenchmarkDialog(results, self)
+        dialog = BenchmarkDialog(results, total_items, self)
         dialog.exec_()
 
     def on_search_algo_changed(self, algo):
@@ -629,13 +634,12 @@ class EarthquakeApp(QMainWindow):
         if algo == "Linear Search":
             results, comparisons, time_ms = algorithms.linearSearch(self.all_data, col, query, filter_type)
         else:
-
             results, comparisons, time_ms = algorithms.binarySearch(self.all_data, col, query)
 
         self.current_data = results
         self.render_table(self.current_data)
         self.search_metrics_label.setText(
-            f"Results: {len(results):,} found | Time: {time_ms:.2f} ms | Comparisons: {comparisons:,}"
+            f"Results: {len(results):,} found out of {len(self.all_data):,} records searched | Time: {time_ms:.2f} ms | Comparisons: {comparisons:,}"
         )
 
     def reset_search(self):
@@ -685,7 +689,7 @@ class EarthquakeApp(QMainWindow):
         self.current_data = results
         self.render_table(self.current_data)
         self.msearch_metrics_label.setText(
-            f"Multi-Search Metrics: Time: {time_ms:.2f} ms | Matches: {len(results):,}"
+            f"Multi-Search: {len(results):,} matches found out of {len(self.all_data):,} records searched | Time: {time_ms:.2f} ms"
         )
 
 if __name__ == "__main__":

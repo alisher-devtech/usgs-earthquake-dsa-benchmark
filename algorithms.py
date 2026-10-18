@@ -1,16 +1,19 @@
 import time
 
 def shouldSwap(r1, r2, col, ascending=True):
-    v1 = r1.get(col, 0)
+    v1 = r1.get(col)
+    v2 = r2.get(col)
     if v1 is None:
-        v1 = 0
-    v2 = r2.get(col, 0)
+        v1 = "" if isinstance(v2, str) else 0
     if v2 is None:
-        v2 = 0
+        v2 = "" if isinstance(v1, str) else 0
+    if type(v1) != type(v2):
+        v1, v2 = str(v1), str(v2)
     if ascending:
         return v1 > v2
     else:
         return v1 < v2
+
 
 def bubbleSort(arr, col, ascending=True):
     A = list(arr)
@@ -148,8 +151,11 @@ def countingSort(arr, col, ascending=True):
     n = len(A)
     if n == 0:
         return A, 0, 0
-    minVal = min(float(x.get(col, 0) or 0) for x in A)
-    maxVal = max(float(x.get(col, 0) or 0) for x in A)
+    try:
+        minVal = min(float(x.get(col, 0) or 0) for x in A)
+        maxVal = max(float(x.get(col, 0) or 0) for x in A)
+    except (ValueError, TypeError):
+        return mergeSort(arr, col, ascending)
     span = maxVal - minVal
     if span <= 50:
         scale = 100
@@ -200,8 +206,11 @@ def radixSort(arr, col, ascending=True):
     n = len(A)
     if n == 0:
         return A, 0, 0
-    minVal = min(float(x.get(col, 0) or 0) for x in A)
-    maxVal = max(float(x.get(col, 0) or 0) for x in A)
+    try:
+        minVal = min(float(x.get(col, 0) or 0) for x in A)
+        maxVal = max(float(x.get(col, 0) or 0) for x in A)
+    except (ValueError, TypeError):
+        return mergeSort(arr, col, ascending)
     M = int(round((maxVal - minVal) * 100))
     units = 1
     swap = [0]
@@ -218,8 +227,11 @@ def bucketSort(arr, col, ascending=True):
     n = len(A)
     if n <= 1:
         return A, 0, 0
-    minVal = min(float(x.get(col, 0) or 0) for x in A)
-    maxVal = max(float(x.get(col, 0) or 0) for x in A)
+    try:
+        minVal = min(float(x.get(col, 0) or 0) for x in A)
+        maxVal = max(float(x.get(col, 0) or 0) for x in A)
+    except (ValueError, TypeError):
+        return mergeSort(arr, col, ascending)
     span = maxVal - minVal
     if span == 0:
         span = 1.0
@@ -325,16 +337,14 @@ def multiLevelCompare(r1, r2, col1, asc1, col2, asc2):
     v1_a = r1.get(col1)
     v1_b = r2.get(col1)
     if v1_a != v1_b:
-        if asc1:
-            return v1_a > v1_b
-        else:
-            return v1_a < v1_b
+        if type(v1_a) != type(v1_b):
+            v1_a, v1_b = str(v1_a), str(v1_b)
+        return (v1_a > v1_b) if asc1 else (v1_a < v1_b)
     v2_a = r1.get(col2)
     v2_b = r2.get(col2)
-    if asc2:
-        return v2_a > v2_b
-    else:
-        return v2_a < v2_b
+    if type(v2_a) != type(v2_b):
+        v2_a, v2_b = str(v2_a), str(v2_b)
+    return (v2_a > v2_b) if asc2 else (v2_a < v2_b)
 
 def multiLevelMerge(arr, p, q, r, col1, asc1, col2, asc2, comp, swap):
     left = arr[p : q + 1]
