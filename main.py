@@ -228,6 +228,7 @@ class EarthquakeApp(QMainWindow):
         controls.addWidget(QLabel("Algorithm:"))
         self.search_algo_cb = QComboBox()
         self.search_algo_cb.addItems(["Linear Search", "Binary Search"])
+        self.search_algo_cb.currentTextChanged.connect(self.on_search_algo_changed)
         controls.addWidget(self.search_algo_cb)
 
         controls.addWidget(QLabel("Filter:"))
@@ -573,6 +574,13 @@ class EarthquakeApp(QMainWindow):
 
         dialog = BenchmarkDialog(results, self)
         dialog.exec_()
+
+    def on_search_algo_changed(self, algo):
+        if algo == "Binary Search":
+            self.search_filter_cb.setCurrentText("equals")
+            self.search_filter_cb.setEnabled(False)
+        else:
+            self.search_filter_cb.setEnabled(True)
 
     def execute_search(self):
         if not self.all_data:

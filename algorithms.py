@@ -431,8 +431,10 @@ def binarySearch(arr, col, query):
     sortedList, sort_comp, sort_swap = shellSort(arr, col, ascending=True)
     try:
         target = float(query)
+        is_num = True
     except ValueError:
-        target = query
+        target = str(query).strip().lower()
+        is_num = False
     low = 0
     high = len(sortedList) - 1
     comp = 0
@@ -440,7 +442,14 @@ def binarySearch(arr, col, query):
     while low <= high:
         comp += 1
         mid = (low + high) // 2
-        mVal = sortedList[mid].get(col)
+        rawVal = sortedList[mid].get(col)
+        if is_num:
+            try:
+                mVal = float(rawVal) if rawVal is not None else 0.0
+            except (ValueError, TypeError):
+                mVal = 0.0
+        else:
+            mVal = str(rawVal).strip().lower() if rawVal is not None else ""
         if mVal == target:
             foundIdx = mid
             break
@@ -451,14 +460,24 @@ def binarySearch(arr, col, query):
     res = []
     if foundIdx != -1:
         idx = foundIdx
-        while idx >= 0 and sortedList[idx].get(col) == target:
-            res.append(sortedList[idx])
-            idx -= 1
+        while idx >= 0:
+            rawVal = sortedList[idx].get(col)
+            val = float(rawVal) if is_num else (str(rawVal).strip().lower() if rawVal is not None else "")
+            if val == target:
+                res.append(sortedList[idx])
+                idx = idx - 1
+            else:
+                break
         res.reverse()
         idx = foundIdx + 1
-        while idx < len(sortedList) and sortedList[idx].get(col) == target:
-            res.append(sortedList[idx])
-            idx += 1
+        while idx < len(sortedList):
+            rawVal = sortedList[idx].get(col)
+            val = float(rawVal) if is_num else (str(rawVal).strip().lower() if rawVal is not None else "")
+            if val == target:
+                res.append(sortedList[idx])
+                idx = idx + 1
+            else:
+                break
     elapsed_ms = (time.time() - t0) * 1000.0
     return res, comp, elapsed_ms
 
