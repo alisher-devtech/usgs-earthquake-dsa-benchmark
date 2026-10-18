@@ -148,14 +148,8 @@ def countingSort(arr, col, ascending=True):
     n = len(A)
     if n == 0:
         return A, 0, 0
-    vals = []
-    for x in A:
-        val = x.get(col, 0)
-        if val is None:
-            val = 0
-        vals.append(float(val))
-    minVal = min(vals)
-    maxVal = max(vals)
+    minVal = min(float(x.get(col, 0) or 0) for x in A)
+    maxVal = max(float(x.get(col, 0) or 0) for x in A)
     span = maxVal - minVal
     if span <= 50:
         scale = 100
@@ -163,101 +157,80 @@ def countingSort(arr, col, ascending=True):
         scale = 100000 / span
     else:
         scale = 1
-    keys = []
-    for v in vals:
-        keys.append(int(round((v - minVal) * scale)))
-    M = max(keys)
+    M = int(round(span * scale))
     count_array = [0] * (M + 1)
     output_array = [0] * n
-    for k in keys:
-        count_array[k] = count_array[k] + 1
+    for x in A:
+        val = int(round((float(x.get(col, 0) or 0) - minVal) * scale))
+        count_array[val] = count_array[val] + 1
     for i in range(1, M + 1):
         count_array[i] = count_array[i] + count_array[i - 1]
     for j in range(n - 1, -1, -1):
-        value = keys[j]
-        target_idx = count_array[value] - 1
+        val = int(round((float(A[j].get(col, 0) or 0) - minVal) * scale))
+        target_idx = count_array[val] - 1
         output_array[target_idx] = A[j]
-        count_array[value] -= 1
+        count_array[val] -= 1
     if not ascending:
         output_array.reverse()
     return output_array, n, n
 
-def counting_sort_by_digit(A, units, swap):
+def counting_sort_by_digit(A, col, minVal, units, swap):
     n = len(A)
     count_array = [0] * 10
     output_array = [0] * n
     for x in A:
-        digit = (x[1] // units) % 10
+        value = int(round((float(x.get(col, 0) or 0) - minVal) * 100))
+        digit = (value // units) % 10
         count_array[digit] = count_array[digit] + 1
     for i in range(1, 10):
         count_array[i] = count_array[i] + count_array[i - 1]
     for j in range(n - 1, -1, -1):
-        value = A[j]
-        digit = (value[1] // units) % 10
+        value = int(round((float(A[j].get(col, 0) or 0) - minVal) * 100))
+        digit = (value // units) % 10
         target_idx = count_array[digit] - 1
-        output_array[target_idx] = value
+        output_array[target_idx] = A[j]
         count_array[digit] = count_array[digit] - 1
         swap[0] += 1
     for i in range(n):
         A[i] = output_array[i]
+    return A
 
 def radixSort(arr, col, ascending=True):
     A = list(arr)
     n = len(A)
     if n == 0:
         return A, 0, 0
-    vals = []
-    for x in A:
-        val = x.get(col, 0)
-        if val is None:
-            val = 0
-        vals.append(float(val))
-    minVal = min(vals)
-    paired = []
-    max_key = 0
-    for i in range(n):
-        int_key = int(round((vals[i] - minVal) * 100))
-        paired.append((A[i], int_key))
-        if int_key > max_key:
-            max_key = int_key
-    M = max_key
+    minVal = min(float(x.get(col, 0) or 0) for x in A)
+    maxVal = max(float(x.get(col, 0) or 0) for x in A)
+    M = int(round((maxVal - minVal) * 100))
     units = 1
     swap = [0]
     while M // units > 0:
-        counting_sort_by_digit(paired, units, swap)
+        counting_sort_by_digit(A, col, minVal, units, swap)
         units *= 10
-    res = []
-    for p in paired:
-        res.append(p[0])
     if not ascending:
-        res.reverse()
+        A.reverse()
     comparisons = n * len(str(M))
-    return res, comparisons, swap[0]
+    return A, comparisons, swap[0]
 
 def bucketSort(arr, col, ascending=True):
     A = list(arr)
     n = len(A)
     if n <= 1:
         return A, 0, 0
-    vals = []
-    for x in A:
-        val = x.get(col, 0)
-        if val is None:
-            val = 0
-        vals.append(float(val))
-    minVal = min(vals)
-    maxVal = max(vals)
+    minVal = min(float(x.get(col, 0) or 0) for x in A)
+    maxVal = max(float(x.get(col, 0) or 0) for x in A)
     span = maxVal - minVal
     if span == 0:
         span = 1.0
     num_buckets = min(n, 100)
     buckets = [[] for i in range(num_buckets)]
-    for i in range(n):
-        v = vals[i]
+    for x in A:
+        v = float(x.get(col, 0) or 0)
         target_idx = int(num_buckets * (v - minVal) / span)
         if target_idx >= num_buckets:
             target_idx = num_buckets - 1
-        buckets[target_idx].append(A[i])
+        buckets[target_idx].append(x)
     totalComp = 0
     totalSwaps = 0
     for x in buckets:
