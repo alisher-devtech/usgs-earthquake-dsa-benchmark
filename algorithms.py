@@ -25,9 +25,7 @@ def bubbleSort(arr, col, ascending=True):
         for j in range(n - 1 - i):
             comp += 1
             if shouldSwap(arr[j], arr[j + 1], col, ascending):
-                temp = arr[j]
-                arr[j] = arr[j + 1]
-                arr[j + 1] = temp
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
                 swap += 1
                 swapped = True
         if not swapped:
@@ -46,9 +44,7 @@ def selectionSort(arr, col, ascending=True):
             if shouldSwap(arr[min_idx], arr[j], col, ascending):
                 min_idx = j
         if min_idx != i:
-            temp = arr[i]
-            arr[i] = arr[min_idx]
-            arr[min_idx] = temp
+            arr[i], arr[min_idx] = arr[min_idx], arr[i]
             swap += 1
     return arr, comp, swap
 
@@ -112,13 +108,9 @@ def partition(A, low, high, col, ascending, comp, swap):
         comp[0] += 1
         if not shouldSwap(A[j], pivot, col, ascending):
             i += 1
-            temp = A[i]
-            A[i] = A[j]
-            A[j] = temp
+            A[i], A[j] = A[j], A[i]
             swap[0] += 1
-    temp = A[i + 1]
-    A[i + 1] = A[high]
-    A[high] = temp
+    A[i + 1], A[high] = A[high], A[i + 1]
     swap[0] += 1
     return i + 1
 
@@ -291,9 +283,7 @@ def heapify(A, n, i, col, ascending, comp, swap):
         if shouldSwap(A[right], A[target], col, ascending):
             target = right
     if target != i:
-        temp = A[i]
-        A[i] = A[target]
-        A[target] = temp
+        A[i], A[target] = A[target], A[i]
         swap[0] += 1
         heapify(A, n, target, col, ascending, comp, swap)
 
@@ -305,9 +295,7 @@ def heapSort(arr, col, ascending=True):
     for i in range(n // 2 - 1, -1, -1):
         heapify(A, n, i, col, ascending, comp, swap)
     for i in range(n - 1, 0, -1):
-        temp = A[i]
-        A[i] = A[0]
-        A[0] = temp
+        A[i], A[0] = A[0], A[i]
         swap[0] += 1
         heapify(A, i, 0, col, ascending, comp, swap)
     return A, comp[0], swap[0]
