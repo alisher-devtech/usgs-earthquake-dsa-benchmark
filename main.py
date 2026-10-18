@@ -25,17 +25,16 @@ class BenchmarkDialog(QDialog):
         layout.addWidget(label)
 
         self.table = QTableWidget()
-        self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(["Algorithm", "Complexity", "Stable", "Time (ms)", "Comparisons"])
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(["Algorithm", "Time (ms)", "Comparisons", "Swaps"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setRowCount(len(benchmark_results))
 
         for row_idx, res in enumerate(benchmark_results):
             self.table.setItem(row_idx, 0, QTableWidgetItem(res["name"]))
-            self.table.setItem(row_idx, 1, QTableWidgetItem(res["complexity"]))
-            self.table.setItem(row_idx, 2, QTableWidgetItem(res["stable"]))
-            self.table.setItem(row_idx, 3, QTableWidgetItem(f"{res['time_ms']:.2f} ms"))
-            self.table.setItem(row_idx, 4, QTableWidgetItem(f"{res['comparisons']:,}"))
+            self.table.setItem(row_idx, 1, QTableWidgetItem(f"{res['time_ms']:.2f} ms"))
+            self.table.setItem(row_idx, 2, QTableWidgetItem(f"{res['comparisons']:,}"))
+            self.table.setItem(row_idx, 3, QTableWidgetItem(f"{res['swaps']:,}"))
 
         layout.addWidget(self.table)
 
@@ -210,7 +209,7 @@ class EarthquakeApp(QMainWindow):
 
         layout.addLayout(controls)
 
-        self.sort_metrics_label = QLabel("Metrics: Time: 0.00 ms | Comparisons: 0 | Swaps: 0 | Complexity: - | Stable: -")
+        self.sort_metrics_label = QLabel("Metrics: Time: 0.00 ms | Comparisons: 0 | Swaps: 0")
         self.sort_metrics_label.setStyleSheet("font-weight: bold; color: #1a5276;")
         layout.addWidget(self.sort_metrics_label)
 
@@ -556,10 +555,8 @@ class EarthquakeApp(QMainWindow):
 
         sorted_arr, comparisons, swaps, time_ms = algorithms.runSort(algo, data_to_sort, col, ascending)
 
-        info = algorithms.ALGORITHM_INFO.get(algo, {"complexity": "-", "stable": "-"})
         self.sort_metrics_label.setText(
-            f"Metrics: Time: {time_ms:.2f} ms | Comparisons: {comparisons:,} | Swaps: {swaps:,} | "
-            f"Complexity: {info['complexity']} | Stable: {info['stable']}"
+            f"Metrics: Time: {time_ms:.2f} ms | Comparisons: {comparisons:,} | Swaps: {swaps:,}"
         )
 
         self.current_data = sorted_arr
@@ -578,13 +575,11 @@ class EarthquakeApp(QMainWindow):
         results = []
         for algo_name in algorithms.SORT_FUNCTIONS.keys():
             sorted_arr, comparisons, swaps, time_ms = algorithms.runSort(algo_name, sample_data, col, ascending=True)
-            info = algorithms.ALGORITHM_INFO[algo_name]
             results.append({
                 "name": algo_name,
-                "complexity": info["complexity"],
-                "stable": info["stable"],
                 "time_ms": time_ms,
-                "comparisons": comparisons
+                "comparisons": comparisons,
+                "swaps": swaps
             })
 
         dialog = BenchmarkDialog(results, self)

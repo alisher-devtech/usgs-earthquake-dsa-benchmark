@@ -239,19 +239,6 @@ SORT_FUNCTIONS = {
     "Shell Sort": shellSort,
 }
 
-ALGORITHM_INFO = {
-    "Bubble Sort": {"complexity": "O(n²)", "stable": "Yes"},
-    "Insertion Sort": {"complexity": "O(n²)", "stable": "Yes"},
-    "Selection Sort": {"complexity": "O(n²)", "stable": "No"},
-    "Merge Sort": {"complexity": "O(n log n)", "stable": "Yes"},
-    "Quick Sort": {"complexity": "O(n log n)", "stable": "No"},
-    "Counting Sort": {"complexity": "O(n + k)", "stable": "Yes"},
-    "Radix Sort": {"complexity": "O(d * (n + k))", "stable": "Yes"},
-    "Bucket Sort": {"complexity": "O(n + k)", "stable": "Yes"},
-    "Heap Sort": {"complexity": "O(n log n)", "stable": "No"},
-    "Shell Sort": {"complexity": "O(n^1.5)", "stable": "No"},
-}
-
 def runSort(name, arr, col, ascending=True):
     if name not in SORT_FUNCTIONS:
         return arr, 0, 0, 0.0
