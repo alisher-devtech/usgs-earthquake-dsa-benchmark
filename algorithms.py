@@ -64,39 +64,49 @@ def insertionSort(arr, col, ascending=True):
         A[j + 1] = key
     return A, comp, swap_count
 
-def Merge(left, right, col, ascending, comp, swap):
-    result = []
+def Merge(arr, p, q, r, col, ascending, comp, swap):
+    left = arr[p : q + 1]
+    right = arr[q + 1 : r + 1]
     i = 0
     j = 0
+    k = p
     while i < len(left) and j < len(right):
         comp[0] += 1
         if not shouldSwap(left[i], right[j], col, ascending):
-            result.append(left[i])
+            arr[k] = left[i]
             i = i + 1
         else:
-            result.append(right[j])
+            arr[k] = right[j]
             swap[0] += 1
             j = j + 1
+        k = k + 1
     while i < len(left):
-        result.append(left[i])
+        arr[k] = left[i]
         i = i + 1
+        k = k + 1
     while j < len(right):
-        result.append(right[j])
+        arr[k] = right[j]
         j = j + 1
-    return result
+        k = k + 1
 
-def mergeSort(arr, col, ascending=True):
-    comp = [0]
-    swap = [0]
-    def sort(lst):
-        if len(lst) <= 1:
-            return lst
-        mid = len(lst) // 2
-        left = sort(lst[:mid])
-        right = sort(lst[mid:])
-        return Merge(left, right, col, ascending, comp, swap)
-    sorted_arr = sort(list(arr))
-    return sorted_arr, comp[0], swap[0]
+def mergeSort(arr, col, ascending=True, start=0, end=None, comp=None, swap=None):
+    if comp is None:
+        arr = list(arr)
+        comp = [0]
+        swap = [0]
+        end = len(arr) - 1
+        is_root = True
+    else:
+        is_root = False
+
+    if start < end:
+        mid = (start + end) // 2
+        mergeSort(arr, col, ascending, start, mid, comp, swap)
+        mergeSort(arr, col, ascending, mid + 1, end, comp, swap)
+        Merge(arr, start, mid, end, col, ascending, comp, swap)
+
+    if is_root:
+        return arr, comp[0], swap[0]
 
 def partition(A, low, high, col, ascending, comp, swap):
     x = A[high]
@@ -111,21 +121,27 @@ def partition(A, low, high, col, ascending, comp, swap):
     swap[0] += 1
     return i + 1
 
-def quickSort(arr, col, ascending=True):
-    A = list(arr)
-    comp = [0]
-    swap = [0]
-    def sort(low, high):
-        while low < high:
-            q = partition(A, low, high, col, ascending, comp, swap)
-            if (q - low) < (high - q):
-                sort(low, q - 1)
-                low = q + 1
-            else:
-                sort(q + 1, high)
-                high = q - 1
-    sort(0, len(A) - 1)
-    return A, comp[0], swap[0]
+def quickSort(A, col, ascending=True, low=0, high=None, comp=None, swap=None):
+    if comp is None:
+        A = list(A)
+        comp = [0]
+        swap = [0]
+        high = len(A) - 1
+        is_root = True
+    else:
+        is_root = False
+
+    while low < high:
+        q = partition(A, low, high, col, ascending, comp, swap)
+        if (q - low) < (high - q):
+            quickSort(A, col, ascending, low, q - 1, comp, swap)
+            low = q + 1
+        else:
+            quickSort(A, col, ascending, q + 1, high, comp, swap)
+            high = q - 1
+
+    if is_root:
+        return A, comp[0], swap[0]
 
 def countingSort(arr, col, ascending=True):
     A = list(arr)
@@ -347,40 +363,51 @@ def multiLevelCompare(r1, r2, col1, asc1, col2, asc2):
     else:
         return v2_a < v2_b
 
-def multiLevelSort(arr, col1, asc1, col2, asc2):
-    comp = [0]
-    swap = [0]
-    def merge(left, right):
-        res = []
-        i = 0
-        j = 0
-        while i < len(left) and j < len(right):
-            comp[0] += 1
-            if not multiLevelCompare(left[i], right[j], col1, asc1, col2, asc2):
-                res.append(left[i])
-                i = i + 1
-            else:
-                res.append(right[j])
-                swap[0] += 1
-                j = j + 1
-        while i < len(left):
-            res.append(left[i])
+def multiLevelMerge(arr, p, q, r, col1, asc1, col2, asc2, comp, swap):
+    left = arr[p : q + 1]
+    right = arr[q + 1 : r + 1]
+    i = 0
+    j = 0
+    k = p
+    while i < len(left) and j < len(right):
+        comp[0] += 1
+        if not multiLevelCompare(left[i], right[j], col1, asc1, col2, asc2):
+            arr[k] = left[i]
             i = i + 1
-        while j < len(right):
-            res.append(right[j])
+        else:
+            arr[k] = right[j]
+            swap[0] += 1
             j = j + 1
-        return res
-    def sort(lst):
-        if len(lst) <= 1:
-            return lst
-        mid = len(lst) // 2
-        left = sort(lst[:mid])
-        right = sort(lst[mid:])
-        return merge(left, right)
-    t0 = time.time()
-    sorted_arr = sort(list(arr))
-    elapsed_ms = (time.time() - t0) * 1000.0
-    return sorted_arr, comp[0], swap[0], elapsed_ms
+        k = k + 1
+    while i < len(left):
+        arr[k] = left[i]
+        i = i + 1
+        k = k + 1
+    while j < len(right):
+        arr[k] = right[j]
+        j = j + 1
+        k = k + 1
+
+def multiLevelSort(arr, col1, asc1, col2, asc2, start=0, end=None, comp=None, swap=None):
+    if comp is None:
+        arr = list(arr)
+        comp = [0]
+        swap = [0]
+        end = len(arr) - 1
+        t0 = time.time()
+        is_root = True
+    else:
+        is_root = False
+
+    if start < end:
+        mid = (start + end) // 2
+        multiLevelSort(arr, col1, asc1, col2, asc2, start, mid, comp, swap)
+        multiLevelSort(arr, col1, asc1, col2, asc2, mid + 1, end, comp, swap)
+        multiLevelMerge(arr, start, mid, end, col1, asc1, col2, asc2, comp, swap)
+
+    if is_root:
+        elapsed_ms = (time.time() - t0) * 1000.0
+        return arr, comp[0], swap[0], elapsed_ms
 
 def matchFilter(rowVal, query, filterType):
     sVal = str(rowVal).strip().lower()
