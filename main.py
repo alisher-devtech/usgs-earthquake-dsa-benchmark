@@ -14,27 +14,42 @@ from PyQt5.QtCore import Qt
 from data_collector import ScraperThread, DEFAULT_API_URL
 import algorithms
 
+ALGORITHM_INFO = {
+    "Bubble Sort": {"complexity": "O(n^2)", "stable": "Yes"},
+    "Insertion Sort": {"complexity": "O(n^2)", "stable": "Yes"},
+    "Selection Sort": {"complexity": "O(n^2)", "stable": "No"},
+    "Merge Sort": {"complexity": "O(n log n)", "stable": "Yes"},
+    "Quick Sort": {"complexity": "O(n log n)", "stable": "No"},
+    "Counting Sort": {"complexity": "O(n + k)", "stable": "Yes"},
+    "Radix Sort": {"complexity": "O(d * (n + k))", "stable": "Yes"},
+    "Bucket Sort": {"complexity": "O(n + k)", "stable": "Yes"},
+    "Heap Sort": {"complexity": "O(n log n)", "stable": "No"},
+    "Shell Sort": {"complexity": "O(n^1.5)", "stable": "No"},
+}
+
 class BenchmarkDialog(QDialog):
     def __init__(self, benchmark_results, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Sorting Algorithms Benchmark")
-        self.resize(650, 320)
+        self.resize(750, 350)
 
         layout = QVBoxLayout(self)
         label = QLabel("<b>Benchmark Comparison on Selected Column:</b>")
         layout.addWidget(label)
 
         self.table = QTableWidget()
-        self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Algorithm", "Time (ms)", "Comparisons", "Swaps"])
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels(["Algorithm", "Complexity", "Stable", "Time (ms)", "Comparisons", "Swaps"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setRowCount(len(benchmark_results))
 
         for row_idx, res in enumerate(benchmark_results):
             self.table.setItem(row_idx, 0, QTableWidgetItem(res["name"]))
-            self.table.setItem(row_idx, 1, QTableWidgetItem(f"{res['time_ms']:.2f} ms"))
-            self.table.setItem(row_idx, 2, QTableWidgetItem(f"{res['comparisons']:,}"))
-            self.table.setItem(row_idx, 3, QTableWidgetItem(f"{res['swaps']:,}"))
+            self.table.setItem(row_idx, 1, QTableWidgetItem(res.get("complexity", "-")))
+            self.table.setItem(row_idx, 2, QTableWidgetItem(res.get("stable", "-")))
+            self.table.setItem(row_idx, 3, QTableWidgetItem(f"{res['time_ms']:.2f} ms"))
+            self.table.setItem(row_idx, 4, QTableWidgetItem(f"{res['comparisons']:,}"))
+            self.table.setItem(row_idx, 5, QTableWidgetItem(f"{res['swaps']:,}"))
 
         layout.addWidget(self.table)
 
@@ -187,6 +202,7 @@ class EarthquakeApp(QMainWindow):
         controls.addWidget(QLabel("Algorithm:"))
         self.sort_algo_cb = QComboBox()
         self.sort_algo_cb.addItems(list(algorithms.SORT_FUNCTIONS.keys()))
+        self.sort_algo_cb.currentTextChanged.connect(self.on_sort_algo_changed)
         controls.addWidget(self.sort_algo_cb)
 
         controls.addWidget(QLabel("Order:"))
@@ -209,7 +225,11 @@ class EarthquakeApp(QMainWindow):
 
         layout.addLayout(controls)
 
-        self.sort_metrics_label = QLabel("Time: 0.00 ms\nComparisons: 0\nSwaps: 0")
+        initial_algo = self.sort_algo_cb.currentText()
+        initial_info = ALGORITHM_INFO.get(initial_algo, {"complexity": "-", "stable": "-"})
+        self.sort_metrics_label = QLabel(
+            f"Time: 0.00 ms\nComparisons: 0\nSwaps: 0\nComplexity: {initial_info['complexity']}\nStable: {initial_info['stable']}"
+        )
         self.sort_metrics_label.setStyleSheet("font-weight: bold; color: #1a5276;")
         layout.addWidget(self.sort_metrics_label)
 
@@ -531,6 +551,12 @@ class EarthquakeApp(QMainWindow):
         except ValueError:
             pass
 
+    def on_sort_algo_changed(self, algo):
+        info = ALGORITHM_INFO.get(algo, {"complexity": "-", "stable": "-"})
+        self.sort_metrics_label.setText(
+            f"Time: 0.00 ms\nComparisons: 0\nSwaps: 0\nComplexity: {info['complexity']}\nStable: {info['stable']}"
+        )
+
     def execute_sort(self):
         if not self.all_data:
             QMessageBox.warning(self, "No Data", "Please collect or load data first.")
@@ -545,8 +571,9 @@ class EarthquakeApp(QMainWindow):
 
         sorted_arr, comparisons, swaps, time_ms = algorithms.runSort(algo, source_data, col, ascending)
 
+        info = ALGORITHM_INFO.get(algo, {"complexity": "-", "stable": "-"})
         self.sort_metrics_label.setText(
-            f"Time: {time_ms:.2f} ms\nComparisons: {comparisons:,}\nSwaps: {swaps:,}"
+            f"Time: {time_ms:.2f} ms\nComparisons: {comparisons:,}\nSwaps: {swaps:,}\nComplexity: {info['complexity']}\nStable: {info['stable']}"
         )
 
         self.current_data = sorted_arr
@@ -565,8 +592,11 @@ class EarthquakeApp(QMainWindow):
         results = []
         for algo_name in algorithms.SORT_FUNCTIONS.keys():
             sorted_arr, comparisons, swaps, time_ms = algorithms.runSort(algo_name, sample_data, col, ascending=True)
+            info = ALGORITHM_INFO.get(algo_name, {"complexity": "-", "stable": "-"})
             results.append({
                 "name": algo_name,
+                "complexity": info["complexity"],
+                "stable": info["stable"],
                 "time_ms": time_ms,
                 "comparisons": comparisons,
                 "swaps": swaps
