@@ -1,7 +1,4 @@
-import sys
 import time
-
-sys.setrecursionlimit(50000)
 
 def shouldSwap(r1, r2, col, ascending=True):
     v1 = r1.get(col, 0)
@@ -145,7 +142,7 @@ def countingSort(arr, col, ascending=True):
     maxVal = max(vals)
     span = maxVal - minVal
     if span <= 50:
-        scale = 10
+        scale = 100
     elif span > 100000:
         scale = 100000 / span
     else:
@@ -202,16 +199,12 @@ def radixSort(arr, col, ascending=True):
         vals.append(float(val))
     minVal = min(vals)
     paired = []
-    for x in A:
-        val = x.get(col, 0)
-        if val is None:
-            val = 0
-        int_key = int(round((float(val) - minVal) * 100))
-        paired.append((x, int_key))
     max_key = 0
-    for p in paired:
-        if p[1] > max_key:
-            max_key = p[1]
+    for i in range(n):
+        int_key = int(round((vals[i] - minVal) * 100))
+        paired.append((A[i], int_key))
+        if int_key > max_key:
+            max_key = int_key
     units = 1
     swap = [0]
     while max_key // units > 0:
@@ -263,12 +256,11 @@ def bucketSort(arr, col, ascending=True):
             buckets[i] = sortedB
     if not ascending:
         buckets.reverse()
-    idx = 0
+    res = []
     for b in buckets:
         for y in b:
-            A[idx] = y
-            idx += 1
-    return A, totalComp, totalSwaps
+            res.append(y)
+    return res, totalComp, totalSwaps
 
 def heapify(A, n, i, col, ascending, comp, swap):
     target = i
