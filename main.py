@@ -1,9 +1,3 @@
-"""
-DSA Project 1: Main Application (PyQt5)
-Simple, clean, and beginner-friendly structure.
-Everything is built with basic PyQt widgets and standard functions.
-"""
-
 import os
 import sys
 import json
@@ -20,59 +14,48 @@ from PyQt5.QtCore import Qt
 from data_collector import ScraperThread, DEFAULT_API_URL
 import algorithms
 
-
-# ==========================================
-# BENCHMARK RESULT DIALOG
-# ==========================================
 class BenchmarkDialog(QDialog):
-    """Simple popup table to display benchmark comparison results."""
     def __init__(self, benchmark_results, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Sorting Algorithms Benchmark")
         self.resize(650, 320)
-        
+
         layout = QVBoxLayout(self)
         label = QLabel("<b>Benchmark Comparison on Selected Column:</b>")
         layout.addWidget(label)
-        
-        # Results Table
+
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["Algorithm", "Complexity", "Stable", "Time (ms)", "Comparisons"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table.setRowCount(len(benchmark_results))
-        
+
         for row_idx, res in enumerate(benchmark_results):
             self.table.setItem(row_idx, 0, QTableWidgetItem(res["name"]))
             self.table.setItem(row_idx, 1, QTableWidgetItem(res["complexity"]))
             self.table.setItem(row_idx, 2, QTableWidgetItem(res["stable"]))
             self.table.setItem(row_idx, 3, QTableWidgetItem(f"{res['time_ms']:.2f} ms"))
             self.table.setItem(row_idx, 4, QTableWidgetItem(f"{res['comparisons']:,}"))
-            
+
         layout.addWidget(self.table)
-        
+
         close_btn = QPushButton("Close")
         close_btn.clicked.connect(self.accept)
         layout.addWidget(close_btn)
 
-
-# ==========================================
-# MAIN APPLICATION WINDOW
-# ==========================================
 class EarthquakeApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("CS200 DSA Project 1 - USGS Earthquakes Explorer")
         self.resize(1150, 750)
-        
-        # Core data storage
-        self.all_data = []         # Full dataset (15,000+ items)
-        self.current_data = []     # Currently displayed / filtered items
+
+        self.all_data = []
+        self.current_data = []
         self.columns = ["id", "place", "magnitude", "time", "depth", "latitude", "longitude", "significance", "status"]
         self.scraper_thread = None
         self.current_page = 1
         self.page_size = 1000
-        
+
         self.init_ui()
         self.load_cached_data_if_exists()
 
@@ -80,45 +63,41 @@ class EarthquakeApp(QMainWindow):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        
-        # 1. TOP SECTION: SCRAPER CONTROLS & URL INPUT
+
         scraper_box = QGroupBox("1. Data Scraping / API Collection (15,000+ Entities)")
         scraper_layout = QVBoxLayout(scraper_box)
-        
-        # URL Input
+
         url_layout = QHBoxLayout()
         url_label = QLabel("API URL:")
         self.url_input = QLineEdit(DEFAULT_API_URL)
         url_layout.addWidget(url_label)
         url_layout.addWidget(self.url_input)
         scraper_layout.addLayout(url_layout)
-        
-        # Buttons & Progress Bar
+
         btn_layout = QHBoxLayout()
         self.btn_start = QPushButton("▶ Start Scraping")
         self.btn_pause = QPushButton("⏸ Pause")
         self.btn_resume = QPushButton("⏯ Resume")
         self.btn_stop = QPushButton("⏹ Stop")
         self.btn_load_file = QPushButton("📁 Load Saved JSON")
-        
+
         self.btn_pause.setEnabled(False)
         self.btn_resume.setEnabled(False)
         self.btn_stop.setEnabled(False)
-        
+
         self.btn_start.clicked.connect(self.start_scraping)
         self.btn_pause.clicked.connect(self.pause_scraping)
         self.btn_resume.clicked.connect(self.resume_scraping)
         self.btn_stop.clicked.connect(self.stop_scraping)
         self.btn_load_file.clicked.connect(self.load_saved_file)
-        
+
         btn_layout.addWidget(self.btn_start)
         btn_layout.addWidget(self.btn_pause)
         btn_layout.addWidget(self.btn_resume)
         btn_layout.addWidget(self.btn_stop)
         btn_layout.addWidget(self.btn_load_file)
         scraper_layout.addLayout(btn_layout)
-        
-        # Progress Bar & Status
+
         prog_layout = QHBoxLayout()
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 15000)
@@ -127,19 +106,17 @@ class EarthquakeApp(QMainWindow):
         prog_layout.addWidget(self.progress_bar)
         prog_layout.addWidget(self.status_label)
         scraper_layout.addLayout(prog_layout)
-        
+
         main_layout.addWidget(scraper_box)
-        
-        # 2. MIDDLE SECTION: MAIN DATA TABLE & PAGINATION
+
         self.table = QTableWidget()
         self.table.setColumnCount(len(self.columns))
         self.table.setHorizontalHeaderLabels([col.upper() for col in self.columns])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         main_layout.addWidget(self.table)
-        
-        # 2.1 PAGINATION & DISPLAY INSTRUCTIONS BAR
+
         pagination_layout = QHBoxLayout()
-        
+
         self.btn_first_page = QPushButton("⏮ First")
         self.btn_prev_page = QPushButton("◀ Prev")
         self.page_info_label = QLabel("Page 1 of 1 | Showing 0 records")
@@ -155,7 +132,7 @@ class EarthquakeApp(QMainWindow):
         self.btn_prev_page.clicked.connect(self.go_prev_page)
         self.btn_next_page.clicked.connect(self.go_next_page)
         self.btn_last_page.clicked.connect(self.go_last_page)
-        
+
         jump_label = QLabel("Go to Page:")
         self.page_spin = QSpinBox()
         self.page_spin.setRange(1, 1)
@@ -190,8 +167,7 @@ class EarthquakeApp(QMainWindow):
         pagination_layout.addStretch()
 
         main_layout.addLayout(pagination_layout)
-        
-        # 3. BOTTOM SECTION: TABS FOR SORTING, SEARCHING, BENCHMARK
+
         self.tabs = QTabWidget()
         self.tabs.addTab(self.create_sorting_tab(), "Single Sorting")
         self.tabs.addTab(self.create_searching_tab(), "Searching & Filters")
@@ -199,192 +175,175 @@ class EarthquakeApp(QMainWindow):
         self.tabs.addTab(self.create_multisearch_tab(), "Multi-Column Searching")
         main_layout.addWidget(self.tabs)
 
-    # -------------------------------------------------------------
-    # TAB 1: SINGLE SORTING & BENCHMARK
-    # -------------------------------------------------------------
     def create_sorting_tab(self):
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        
+
         controls = QHBoxLayout()
         controls.addWidget(QLabel("Column:"))
         self.sort_col_cb = QComboBox()
         self.sort_col_cb.addItems(self.columns)
         controls.addWidget(self.sort_col_cb)
-        
+
         controls.addWidget(QLabel("Algorithm:"))
         self.sort_algo_cb = QComboBox()
         self.sort_algo_cb.addItems(list(algorithms.SORT_FUNCTIONS.keys()))
         controls.addWidget(self.sort_algo_cb)
-        
+
         controls.addWidget(QLabel("Order:"))
         self.sort_order_cb = QComboBox()
         self.sort_order_cb.addItems(["Ascending", "Descending"])
         controls.addWidget(self.sort_order_cb)
-        
+
         controls.addWidget(QLabel("Scope:"))
         self.sort_scope_cb = QComboBox()
         self.sort_scope_cb.addItems(["Current Filtered Data", "Full Dataset"])
         controls.addWidget(self.sort_scope_cb)
-        
+
         self.btn_sort = QPushButton("Sort Now")
         self.btn_sort.clicked.connect(self.execute_sort)
         controls.addWidget(self.btn_sort)
-        
+
         self.btn_benchmark = QPushButton("⚡ Benchmark All Algorithms")
         self.btn_benchmark.clicked.connect(self.execute_benchmark)
         controls.addWidget(self.btn_benchmark)
-        
+
         layout.addLayout(controls)
-        
-        # Metrics Label
+
         self.sort_metrics_label = QLabel("Metrics: Time: 0.00 ms | Comparisons: 0 | Swaps: 0 | Complexity: - | Stable: -")
         self.sort_metrics_label.setStyleSheet("font-weight: bold; color: #1a5276;")
         layout.addWidget(self.sort_metrics_label)
-        
+
         return widget
 
-    # -------------------------------------------------------------
-    # TAB 2: SEARCHING & FILTERS
-    # -------------------------------------------------------------
     def create_searching_tab(self):
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        
+
         controls = QHBoxLayout()
         controls.addWidget(QLabel("Column:"))
         self.search_col_cb = QComboBox()
         self.search_col_cb.addItems(self.columns)
         controls.addWidget(self.search_col_cb)
-        
+
         controls.addWidget(QLabel("Algorithm:"))
         self.search_algo_cb = QComboBox()
         self.search_algo_cb.addItems(["Linear Search", "Binary Search"])
         controls.addWidget(self.search_algo_cb)
-        
+
         controls.addWidget(QLabel("Filter:"))
         self.search_filter_cb = QComboBox()
         self.search_filter_cb.addItems(["contains", "starts_with", "ends_with", "equals", ">", "<"])
         controls.addWidget(self.search_filter_cb)
-        
+
         self.search_query_input = QLineEdit()
         self.search_query_input.setPlaceholderText("Enter search query...")
         controls.addWidget(self.search_query_input)
-        
+
         self.btn_search = QPushButton("Search")
         self.btn_search.clicked.connect(self.execute_search)
         controls.addWidget(self.btn_search)
-        
+
         self.btn_reset_search = QPushButton("Reset / Show All")
         self.btn_reset_search.clicked.connect(self.reset_search)
         controls.addWidget(self.btn_reset_search)
-        
+
         layout.addLayout(controls)
-        
-        # Search Metrics Label
+
         self.search_metrics_label = QLabel("Results: All rows shown | Time: 0.00 ms | Comparisons: 0")
         self.search_metrics_label.setStyleSheet("font-weight: bold; color: #1e8449;")
         layout.addWidget(self.search_metrics_label)
-        
+
         return widget
 
-    # -------------------------------------------------------------
-    # TAB 3: MULTI-LEVEL SORTING
-    # -------------------------------------------------------------
     def create_multisort_tab(self):
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        
+
         controls = QHBoxLayout()
         controls.addWidget(QLabel("Primary Column:"))
         self.msort_col1 = QComboBox()
         self.msort_col1.addItems(self.columns)
         self.msort_col1.setCurrentText("magnitude")
         controls.addWidget(self.msort_col1)
-        
+
         self.msort_order1 = QComboBox()
         self.msort_order1.addItems(["Descending", "Ascending"])
         controls.addWidget(self.msort_order1)
-        
+
         controls.addWidget(QLabel("Secondary Column:"))
         self.msort_col2 = QComboBox()
         self.msort_col2.addItems(self.columns)
         self.msort_col2.setCurrentText("depth")
         controls.addWidget(self.msort_col2)
-        
+
         self.msort_order2 = QComboBox()
         self.msort_order2.addItems(["Ascending", "Descending"])
         controls.addWidget(self.msort_order2)
-        
+
         self.btn_msort = QPushButton("Multi-Level Sort")
         self.btn_msort.clicked.connect(self.execute_multisort)
         controls.addWidget(self.btn_msort)
-        
+
         layout.addLayout(controls)
-        
+
         self.msort_metrics_label = QLabel("Multi-Sort Metrics: Time: 0.00 ms | Comparisons: 0 | Swaps: 0")
         self.msort_metrics_label.setStyleSheet("font-weight: bold; color: #7d3c98;")
         layout.addWidget(self.msort_metrics_label)
-        
+
         return widget
 
-    # -------------------------------------------------------------
-    # TAB 4: MULTI-COLUMN SEARCHING (AND / OR / NOT)
-    # -------------------------------------------------------------
     def create_multisearch_tab(self):
         widget = QWidget()
         layout = QVBoxLayout(widget)
-        
+
         row1 = QHBoxLayout()
         row1.addWidget(QLabel("Filter 1 Column:"))
         self.msearch_col1 = QComboBox()
         self.msearch_col1.addItems(self.columns)
         self.msearch_col1.setCurrentText("place")
         row1.addWidget(self.msearch_col1)
-        
+
         self.msearch_ftype1 = QComboBox()
         self.msearch_ftype1.addItems(["contains", "starts_with", "ends_with", "equals", ">", "<"])
         row1.addWidget(self.msearch_ftype1)
-        
+
         self.msearch_q1 = QLineEdit()
         self.msearch_q1.setPlaceholderText("Query 1 (e.g. California)")
         row1.addWidget(self.msearch_q1)
         layout.addLayout(row1)
-        
+
         row2 = QHBoxLayout()
         row2.addWidget(QLabel("Logical Operator:"))
         self.msearch_op = QComboBox()
         self.msearch_op.addItems(["AND", "OR", "NOT"])
         row2.addWidget(self.msearch_op)
-        
+
         row2.addWidget(QLabel("Filter 2 Column:"))
         self.msearch_col2 = QComboBox()
         self.msearch_col2.addItems(self.columns)
         self.msearch_col2.setCurrentText("magnitude")
         row2.addWidget(self.msearch_col2)
-        
+
         self.msearch_ftype2 = QComboBox()
         self.msearch_ftype2.addItems([">", "<", "equals", "contains"])
         row2.addWidget(self.msearch_ftype2)
-        
+
         self.msearch_q2 = QLineEdit()
         self.msearch_q2.setPlaceholderText("Query 2 (e.g. 2.5)")
         row2.addWidget(self.msearch_q2)
-        
+
         self.btn_msearch = QPushButton("Multi Search")
         self.btn_msearch.clicked.connect(self.execute_multisearch)
         row2.addWidget(self.btn_msearch)
         layout.addLayout(row2)
-        
+
         self.msearch_metrics_label = QLabel("Multi-Search Metrics: Time: 0.00 ms | Matches: 0")
         self.msearch_metrics_label.setStyleSheet("font-weight: bold; color: #b9770e;")
         layout.addWidget(self.msearch_metrics_label)
-        
+
         return widget
 
-    # =============================================================
-    # SCRAPER CONTROL METHODS
-    # =============================================================
     def start_scraping(self):
         url = self.url_input.text().strip()
         if not url:
@@ -403,7 +362,6 @@ class EarthquakeApp(QMainWindow):
         self.current_page = 1
         self.page_info_label.setText("Live Scraping in progress...")
 
-        # Start background thread
         self.scraper_thread = ScraperThread(base_url=url, target_count=15000)
         self.scraper_thread.progress_signal.connect(self.update_progress)
         self.scraper_thread.status_signal.connect(self.update_status)
@@ -438,9 +396,8 @@ class EarthquakeApp(QMainWindow):
         self.status_label.setText(text)
 
     def append_batch_to_table(self, new_batch):
-        """Append rows to table directly during scraping for live visual feedback."""
         start_row = self.table.rowCount()
-        # Preview first page rows live
+
         if start_row < self.page_size:
             add_count = min(len(new_batch), self.page_size - start_row)
             self.table.setRowCount(start_row + add_count)
@@ -484,7 +441,6 @@ class EarthquakeApp(QMainWindow):
             QMessageBox.critical(self, "Load Error", f"Error loading file: {str(e)}")
 
     def render_table(self, data_list=None, reset_page=True):
-        """Renders paginated rows in QTableWidget for smooth performance."""
         if data_list is not None:
             self.current_data = data_list
         if reset_page:
@@ -523,7 +479,6 @@ class EarthquakeApp(QMainWindow):
                 val = str(row.get(col_name, ""))
                 self.table.setItem(row_idx, col_idx, QTableWidgetItem(val))
 
-        # Update pagination controls & info label
         self.page_info_label.setText(
             f"Page {self.current_page} of {total_pages} | "
             f"Showing records {start_idx + 1:,} - {end_idx:,} of {total_records:,} (Dataset Total: {len(self.all_data):,})"
@@ -576,9 +531,6 @@ class EarthquakeApp(QMainWindow):
         except ValueError:
             pass
 
-    # =============================================================
-    # SORTING ACTIONS
-    # =============================================================
     def execute_sort(self):
         if not self.all_data:
             QMessageBox.warning(self, "No Data", "Please collect or load data first.")
@@ -591,8 +543,6 @@ class EarthquakeApp(QMainWindow):
 
         source_data = self.current_data if scope == "Current Filtered Data" else self.all_data
 
-        # If Bubble / Selection / Insertion is run on large dataset (15k), limit to 2000 for evaluation speed
-        # or warn user so GUI doesn't freeze for 40 seconds
         data_to_sort = source_data
         if algo in ["Bubble Sort", "Selection Sort", "Insertion Sort"] and len(source_data) > 3000:
             choice = QMessageBox.question(
@@ -621,7 +571,7 @@ class EarthquakeApp(QMainWindow):
             return
 
         col = self.sort_col_cb.currentText()
-        # Benchmark runs on a sample (e.g. 1,000 items) so all algorithms finish in 1-2 seconds
+
         sample_size = min(len(self.all_data), 1000)
         sample_data = self.all_data[:sample_size]
 
@@ -640,9 +590,6 @@ class EarthquakeApp(QMainWindow):
         dialog = BenchmarkDialog(results, self)
         dialog.exec_()
 
-    # =============================================================
-    # SEARCHING ACTIONS
-    # =============================================================
     def execute_search(self):
         if not self.all_data:
             QMessageBox.warning(self, "No Data", "Please collect or load data first.")
@@ -660,7 +607,7 @@ class EarthquakeApp(QMainWindow):
         if algo == "Linear Search":
             results, comparisons, time_ms = algorithms.linearSearch(self.all_data, col, query, filter_type)
         else:
-            # Binary Search requires exact match
+
             results, comparisons, time_ms = algorithms.binarySearch(self.all_data, col, query)
 
         self.current_data = results
@@ -674,9 +621,6 @@ class EarthquakeApp(QMainWindow):
         self.render_table(self.current_data)
         self.search_metrics_label.setText(f"Results: Reset to all {len(self.all_data):,} records")
 
-    # =============================================================
-    # MULTI-LEVEL SORT & MULTI-COLUMN SEARCH
-    # =============================================================
     def execute_multisort(self):
         if not self.all_data:
             QMessageBox.warning(self, "No Data", "Please collect or load data first.")
@@ -722,10 +666,6 @@ class EarthquakeApp(QMainWindow):
             f"Multi-Search Metrics: Time: {time_ms:.2f} ms | Matches: {len(results):,}"
         )
 
-
-# ==========================================
-# APPLICATION ENTRY POINT
-# ==========================================
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = EarthquakeApp()

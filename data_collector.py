@@ -1,9 +1,3 @@
-"""
-Data Collector Module:
-Fetches 15,000+ Earthquake records from USGS API in batches.
-Supports Start, Pause, Resume, Stop using a simple QThread.
-"""
-
 import json
 import time
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -11,20 +5,18 @@ import requests
 
 DEFAULT_API_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2024-01-01&endtime=2024-03-01&minmagnitude=1.0"
 
-
 class ScraperThread(QThread):
-    # Signals for UI communication
-    progress_signal = pyqtSignal(int, int)  # current_count, total_target
-    status_signal = pyqtSignal(str)  # status text message
-    batch_signal = pyqtSignal(list)  # batch of new records
-    finished_signal = pyqtSignal(list)  # all records when done
+
+    progress_signal = pyqtSignal(int, int)
+    status_signal = pyqtSignal(str)
+    batch_signal = pyqtSignal(list)
+    finished_signal = pyqtSignal(list)
 
     def __init__(self, base_url=DEFAULT_API_URL, target_count=15000):
         super().__init__()
         self.base_url = base_url
         self.target_count = target_count
 
-        # Control flags (Very easy to rewrite)
         self.is_running = True
         self.is_paused = False
         self.all_records = []
@@ -50,17 +42,15 @@ class ScraperThread(QThread):
         self.status_signal.emit("Status: Starting download from USGS API...")
 
         while self.is_running and len(self.all_records) < self.target_count:
-            # Handle Pause
+
             while self.is_paused:
                 if not self.is_running:
                     break
                 time.sleep(0.2)
 
-            # Handle Stop
             if not self.is_running:
                 break
 
-            # Build URL with limit and offset
             url = f"{self.base_url}&limit={batch_size}&offset={offset}"
 
             try:
@@ -88,7 +78,6 @@ class ScraperThread(QThread):
                         else [0.0, 0.0, 0.0]
                     )
 
-                    # 9 clean attributes (Numbers and Strings)
                     record = {
                         "id": str(item.get("id", "")),
                         "place": str(props.get("place", "Unknown Location")),
@@ -100,7 +89,7 @@ class ScraperThread(QThread):
                         "time": int(props.get("time", 0)),
                         "depth": (
                             float(coords[2]) if len(coords) > 2 else 0.0
-                        ),  # km depth
+                        ),
                         "latitude": float(coords[1]) if len(coords) > 1 else 0.0,
                         "longitude": (
                             float(coords[0]) if len(coords) > 0 else 0.0
@@ -115,7 +104,6 @@ class ScraperThread(QThread):
                     if len(self.all_records) >= self.target_count:
                         break
 
-                # Send batch to table and update progress
                 self.batch_signal.emit(new_batch)
                 self.progress_signal.emit(
                     len(self.all_records), self.target_count
@@ -125,13 +113,12 @@ class ScraperThread(QThread):
                 )
 
                 offset += batch_size
-                time.sleep(0.3)  # Polite API delay
+                time.sleep(0.3)
 
             except Exception as e:
                 self.status_signal.emit(f"Status: Network error: {str(e)}")
                 break
 
-        # Save data to local json file for instant reloads
         if self.all_records:
             try:
                 with open("earthquakes.json", "w", encoding="utf-8") as f:

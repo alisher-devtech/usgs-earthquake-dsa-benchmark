@@ -1,20 +1,12 @@
-"""
-DSA Project 1: Algorithms Module
-Clean, concise implementations (~250 lines) matching Lab_02_practice.py camelCase conventions.
-"""
-
 import sys
 import time
 
 sys.setrecursionlimit(50000)
 
-
 def shouldSwap(r1, r2, col, ascending=True):
     v1, v2 = r1.get(col, 0) or 0, r2.get(col, 0) or 0
     return v1 > v2 if ascending else v1 < v2
 
-
-#1.Bubble Sort
 def bubbleSort(arr, col, ascending=True):
     arr, n, comp, swap = list(arr), len(arr), 0, 0
     for i in range(n - 1):
@@ -29,8 +21,6 @@ def bubbleSort(arr, col, ascending=True):
             break
     return arr, comp, swap
 
-
-#2.Selection Sort
 def selectionSort(arr, col, ascending=True):
     arr, n, comp, swap = list(arr), len(arr), 0, 0
     for i in range(n):
@@ -44,8 +34,6 @@ def selectionSort(arr, col, ascending=True):
             swap += 1
     return arr, comp, swap
 
-
-#3.Insertion Sort
 def insertionSort(arr, col, ascending=True):
     arr, n, comp, swap = list(arr), len(arr), 0, 0
     for i in range(1, n):
@@ -62,8 +50,6 @@ def insertionSort(arr, col, ascending=True):
         arr[j + 1] = key
     return arr, comp, swap
 
-
-#4.Merge Sort & Merge
 def Merge(left, right, col, ascending, comp, swap):
     result, i, j = [], 0, 0
     while i < len(left) and j < len(right):
@@ -79,7 +65,6 @@ def Merge(left, right, col, ascending, comp, swap):
     result.extend(right[j:])
     return result
 
-
 def mergeSort(arr, col, ascending=True):
     comp, swap = [0], [0]
     def sort(lst):
@@ -89,8 +74,6 @@ def mergeSort(arr, col, ascending=True):
         return Merge(sort(lst[:mid]), sort(lst[mid:]), col, ascending, comp, swap)
     return sort(list(arr)), comp[0], swap[0]
 
-
-#5.Quick Sort & partition
 def partition(A, low, high, col, ascending, comp, swap):
     x, i = A[high], low - 1
     for j in range(low, high):
@@ -102,7 +85,6 @@ def partition(A, low, high, col, ascending, comp, swap):
     A[i + 1], A[high] = A[high], A[i + 1]
     swap[0] += 1
     return i + 1
-
 
 def quickSort(arr, col, ascending=True):
     A, comp, swap = list(arr), [0], [0]
@@ -118,8 +100,6 @@ def quickSort(arr, col, ascending=True):
     sort(0, len(A) - 1)
     return A, comp[0], swap[0]
 
-
-#6.Counting Sort
 def countingSort(arr, col, ascending=True):
     A, n = list(arr), len(arr)
     if n <= 1:
@@ -144,8 +124,6 @@ def countingSort(arr, col, ascending=True):
         output_array.reverse()
     return output_array, n, n
 
-
-#7.Radix Sort & countingSortByDigit
 def countingSortByDigit(A, units, swap):
     n = len(A)
     count_array = [0] * 10
@@ -162,7 +140,6 @@ def countingSortByDigit(A, units, swap):
     for i in range(n):
         A[i] = output_array[i]
 
-
 def radixSort(arr, col, ascending=True):
     A, n = list(arr), len(arr)
     if n <= 1:
@@ -178,8 +155,6 @@ def radixSort(arr, col, ascending=True):
         res.reverse()
     return res, n * len(str(M)), swap[0]
 
-
-#8.Bucket Sort
 def bucketSort(arr, col, ascending=True):
     A, n = list(arr), len(arr)
     if n <= 1:
@@ -208,8 +183,6 @@ def bucketSort(arr, col, ascending=True):
             idx += 1
     return A, totalComp, totalSwaps
 
-
-#9.Heap Sort
 def heapify(A, n, i, col, ascending, comp, swap):
     target, left, right = i, 2 * i + 1, 2 * i + 2
     if left < n:
@@ -225,7 +198,6 @@ def heapify(A, n, i, col, ascending, comp, swap):
         swap[0] += 1
         heapify(A, n, target, col, ascending, comp, swap)
 
-
 def heapSort(arr, col, ascending=True):
     A, n, comp, swap = list(arr), len(arr), [0], [0]
     for i in range(n // 2 - 1, -1, -1):
@@ -236,8 +208,6 @@ def heapSort(arr, col, ascending=True):
         heapify(A, i, 0, col, ascending, comp, swap)
     return A, comp[0], swap[0]
 
-
-#10.Shell Sort
 def shellSort(arr, col, ascending=True):
     A, n = list(arr), len(arr)
     comp, swap, gap = 0, 0, n // 2
@@ -282,7 +252,6 @@ ALGORITHM_INFO = {
     "Shell Sort": {"complexity": "O(n^1.5)", "stable": "No"},
 }
 
-
 def runSort(name, arr, col, ascending=True):
     if name not in SORT_FUNCTIONS:
         return arr, 0, 0, 0.0
@@ -290,15 +259,12 @@ def runSort(name, arr, col, ascending=True):
     sortedArr, comp, swap = SORT_FUNCTIONS[name](arr, col, ascending)
     return sortedArr, comp, swap, (time.time() - t0) * 1000.0
 
-
-#MultiLevel Sort
 def multiLevelCompare(r1, r2, col1, asc1, col2, asc2):
     v1_a, v1_b = r1.get(col1), r2.get(col1)
     if v1_a != v1_b:
         return v1_a > v1_b if asc1 else v1_a < v1_b
     v2_a, v2_b = r1.get(col2), r2.get(col2)
     return v2_a > v2_b if asc2 else v2_a < v2_b
-
 
 def multiLevelSort(arr, col1, asc1, col2, asc2):
     comp, swap = [0], [0]
@@ -324,8 +290,6 @@ def multiLevelSort(arr, col1, asc1, col2, asc2):
     t0 = time.time()
     return sort(list(arr)), comp[0], swap[0], (time.time() - t0) * 1000.0
 
-
-#Searching Algorithms
 def matchFilter(rowVal, query, filterType):
     sVal, sQ = str(rowVal).strip().lower(), str(query).strip().lower()
     if filterType == "contains": return sQ in sVal
@@ -338,12 +302,10 @@ def matchFilter(rowVal, query, filterType):
     except (ValueError, TypeError): pass
     return False
 
-
 def linearSearch(arr, col, query, filterType="contains"):
     t0 = time.time()
     res = [r for r in arr if matchFilter(r.get(col, ""), query, filterType)]
     return res, len(arr), (time.time() - t0) * 1000.0
-
 
 def binarySearch(arr, col, query):
     t0 = time.time()
@@ -377,7 +339,6 @@ def binarySearch(arr, col, query):
             idx += 1
     return res, comp, (time.time() - t0) * 1000.0
 
-
 def compositeSearch(arr, col1, f1, q1, op, col2, f2, q2):
     t0 = time.time()
     res = []
@@ -387,4 +348,3 @@ def compositeSearch(arr, col1, f1, q1, op, col2, f2, q2):
         if cond:
             res.append(r)
     return res, len(arr), (time.time() - t0) * 1000.0
-
