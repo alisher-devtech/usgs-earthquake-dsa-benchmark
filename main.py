@@ -209,7 +209,7 @@ class EarthquakeApp(QMainWindow):
 
         layout.addLayout(controls)
 
-        self.sort_metrics_label = QLabel("Metrics: Time: 0.00 ms | Comparisons: 0 | Swaps: 0")
+        self.sort_metrics_label = QLabel("Time: 0.00 ms\nComparisons: 0\nSwaps: 0")
         self.sort_metrics_label.setStyleSheet("font-weight: bold; color: #1a5276;")
         layout.addWidget(self.sort_metrics_label)
 
@@ -286,7 +286,7 @@ class EarthquakeApp(QMainWindow):
 
         layout.addLayout(controls)
 
-        self.msort_metrics_label = QLabel("Multi-Sort Metrics: Time: 0.00 ms | Comparisons: 0 | Swaps: 0")
+        self.msort_metrics_label = QLabel("Time: 0.00 ms\nComparisons: 0\nSwaps: 0")
         self.msort_metrics_label.setStyleSheet("font-weight: bold; color: #7d3c98;")
         layout.addWidget(self.msort_metrics_label)
 
@@ -542,21 +542,10 @@ class EarthquakeApp(QMainWindow):
 
         source_data = self.current_data if scope == "Current Filtered Data" else self.all_data
 
-        data_to_sort = source_data
-        if algo in ["Bubble Sort", "Selection Sort", "Insertion Sort"] and len(source_data) > 3000:
-            choice = QMessageBox.question(
-                self, "Performance Warning",
-                f"{algo} is O(n²) and sorting {len(source_data):,} rows will take ~30 seconds.\n"
-                "Do you want to run on first 2,000 rows for quick evaluation?",
-                QMessageBox.Yes | QMessageBox.No
-            )
-            if choice == QMessageBox.Yes:
-                data_to_sort = source_data[:2000]
-
-        sorted_arr, comparisons, swaps, time_ms = algorithms.runSort(algo, data_to_sort, col, ascending)
+        sorted_arr, comparisons, swaps, time_ms = algorithms.runSort(algo, source_data, col, ascending)
 
         self.sort_metrics_label.setText(
-            f"Metrics: Time: {time_ms:.2f} ms | Comparisons: {comparisons:,} | Swaps: {swaps:,}"
+            f"Time: {time_ms:.2f} ms\nComparisons: {comparisons:,}\nSwaps: {swaps:,}"
         )
 
         self.current_data = sorted_arr
@@ -633,7 +622,7 @@ class EarthquakeApp(QMainWindow):
         self.current_data = sorted_arr
         self.render_table(self.current_data)
         self.msort_metrics_label.setText(
-            f"Multi-Sort Metrics: Time: {time_ms:.2f} ms | Comparisons: {comparisons:,} | Swaps: {swaps:,}"
+            f"Time: {time_ms:.2f} ms\nComparisons: {comparisons:,}\nSwaps: {swaps:,}"
         )
 
     def execute_multisearch(self):
