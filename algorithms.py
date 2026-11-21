@@ -1,6 +1,5 @@
 import time
-
-def shouldSwap(r1, r2, col, ascending=True):
+def shouldSwap(r1, r2, col, ascending=True): 
     v1 = r1.get(col)
     v2 = r2.get(col)
     if v1 is None:
@@ -13,7 +12,6 @@ def shouldSwap(r1, r2, col, ascending=True):
         return v1 > v2
     else:
         return v1 < v2
-
 
 def bubbleSort(arr, col, ascending=True):
     A = list(arr)
