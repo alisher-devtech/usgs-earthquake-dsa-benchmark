@@ -40,7 +40,6 @@ class ScraperThread(QThread):
         batch_size = 1000
 
         self.status_signal.emit("Status: Starting download from USGS API...")
-
         while self.is_running and len(self.all_records) < self.target_count:
 
             while self.is_paused:
@@ -52,7 +51,6 @@ class ScraperThread(QThread):
                 break
 
             url = f"{self.base_url}&limit={batch_size}&offset={offset}"
-
             try:
                 response = requests.get(url, timeout=15)
                 if response.status_code != 200:
@@ -110,13 +108,11 @@ class ScraperThread(QThread):
                         "significance": int(props.get("sig", 0)),
                         "status": str(props.get("status", "automatic")),
                     }
-
                     new_batch.append(record)
                     self.all_records.append(record)
 
                     if len(self.all_records) >= self.target_count:
                         break
-
                 self.batch_signal.emit(new_batch)
                 self.progress_signal.emit(
                     len(self.all_records), self.target_count
@@ -124,21 +120,18 @@ class ScraperThread(QThread):
                 self.status_signal.emit(
                     f"Status: Fetched {len(self.all_records)} / {self.target_count} records"
                 )
-
                 offset += batch_size
                 time.sleep(0.3)
 
             except Exception as e:
                 self.status_signal.emit(f"Status: Network error: {str(e)}")
                 break
-
         if self.all_records:
             try:
                 with open("earthquakes.json", "w", encoding="utf-8") as f:
                     json.dump(self.all_records, f)
             except Exception:
                 pass
-
         self.finished_signal.emit(self.all_records)
         self.status_signal.emit(
             f"Status: Finished! Total {len(self.all_records)} records loaded."
