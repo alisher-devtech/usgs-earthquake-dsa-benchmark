@@ -309,7 +309,6 @@ def shellSort(arr, col, ascending=True):
             A[j] = key
         gap = gap // 2
     return A, comp, swap_count
-
 SORT_FUNCTIONS = {
     "Bubble Sort": bubbleSort,
     "Insertion Sort": insertionSort,
