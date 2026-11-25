@@ -1,5 +1,5 @@
 import time
-def shouldSwap(r1, r2, col, ascending=True): 
+def shouldSwap(r1, r2, col,ascending=True): 
     v1 = r1.get(col)
     v2 = r2.get(col)
     if v1 is None:
@@ -13,7 +13,7 @@ def shouldSwap(r1, r2, col, ascending=True):
     else:
         return v1 < v2
 
-def bubbleSort(arr, col, ascending=True):
+def bubbleSort(arr, col,ascending=True):
     A = list(arr)
     n = len(A)
     comp = 0
@@ -46,7 +46,7 @@ def selectionSort(arr, col, ascending=True):
             swap_count += 1
     return A, comp, swap_count
 
-def insertionSort(arr, col, ascending=True):
+def insertionSort(arr, col,ascending=True):
     A = list(arr)
     n = len(A)
     comp = 0
